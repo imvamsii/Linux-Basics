@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Update and install Apache or Nginx (choose one)
+sudo apt update && sudo apt install apache2 -y # For Apache
+# sudo apt install nginx -y # For Nginx
+
+# Enable and start the web server
+sudo systemctl start apache2 && sudo systemctl enable apache2
+# sudo systemctl start nginx && sudo systemctl enable nginx # Uncomment if using Nginx
+
+# Firewall setup
+sudo ufw allow 'Apache Full' # For Apache
+# sudo ufw allow 'Nginx Full' # For Nginx
+sudo ufw allow OpenSSH
+sudo ufw enable
+
+# SSH Key setup (manual step required to generate and transfer keys)
+# ssh-keygen -t rsa -b 4096
+# ssh-copy-id user@your_server_ip
+sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo systemctl restart sshd
+
+# Automated server updates and maintenance
+sudo apt update && sudo apt upgrade -y
+sudo apt autoremove -y
+sudo apt clean
+sudo systemctl restart apache2 # Restart web server (or nginx)
+
+# Monitoring system health
+echo "Disk Usage:"
+df -h | grep '^/dev/'
+
+echo "Memory Usage:"
+free -m
+
+echo "CPU Load:"
+uptime
+
+# Check if Apache/Nginx is running and restart if necessary
+if systemctl status apache2 | grep "active (running)"; then
+    echo "Apache is running"
+else
+    echo "Apache is NOT running, starting service..."
+    sudo systemctl start apache2
+fi
+
+# Scheduling automated maintenance with cron (add manually)
+# sudo crontab -e
+# 0 0 * * SUN /path/to/this_script.sh
